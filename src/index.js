@@ -1,83 +1,83 @@
 // Your code here
-document.addEventListener("DOMContentLoaded", () => {
-    const characterBar = document.getElementById("character-bar");
-    const nameElement = document.getElementById("name");
-    const imageElement = document.getElementById("image");
-    const voteCount = document.getElementById("vote-count");
-    const votesForm = document.getElementById("votes-form");
-    const resetButton = document.getElementById("reset-btn");
-    const characterForm = document.getElementById("character-form");
+function characterNames() {
+    fetch('http://localhost:3000/characters')
+    .then(res => res.json())
+    .then(data => {
+        console.log(data);
+        displayCharacterNames(data);
+        addCharacterClickListener(data); 
+    })
+}
 
-    let currentCharacter = null;
+function displayCharacterNames(characters) {
+    let characterList = document.getElementById('character-bar');
 
-    function fetchCharacters() {
-        fetch("http://localhost:3000/characters")
-            .then(response => response.json())
-            .then(characters => {
-                characters.forEach(addCharacterToBar);
-            });
-    }
-
-    function addCharacterToBar(character) {
-        const span = document.createElement("span");
-        span.textContent = character.name;
-        span.addEventListener("click", () => displayCharacter(character));
-        characterBar.appendChild(span);
-    }
-
-    function displayCharacter(character) {
-        currentCharacter = character;
-        nameElement.textContent = character.name;
-        imageElement.src = character.image;
-        voteCount.textContent = character.votes;
-    }
-
-    votesForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const votes = parseInt(document.getElementById("votes").value, 10);
-        if (currentCharacter && !isNaN(votes)) {
-            currentCharacter.votes += votes;
-            voteCount.textContent = currentCharacter.votes;
-            updateVotesOnServer(currentCharacter);
-        }
-        votesForm.reset();
-    });
-
-    function updateVotesOnServer(character) {
-        fetch(`http://localhost:3000/characters/${character.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ votes: character.votes })
-        });
-    }
-
-    resetButton.addEventListener("click", () => {
-        if (currentCharacter) {
-            currentCharacter.votes = 0;
-            voteCount.textContent = 0;
-            updateVotesOnServer(currentCharacter);
-        }
-    });
-
-    characterForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const name = document.getElementById("new-name").value;
-        const image = document.getElementById("new-image").value;
-        const newCharacter = { name, image, votes: 0 };
-        
-        fetch("http://localhost:3000/characters", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newCharacter)
-        })
-        .then(response => response.json())
-        .then(character => {
-            addCharacterToBar(character);
-            displayCharacter(character);
-        });
-        
-        characterForm.reset();
-    });
-
-    fetchCharacters();
+characters.forEach(character => { 
+    const list = document.createElement('span');
+    list.innerText = character.name;  
+    list.style.cursor = "pointer";  
+    characterList.appendChild(list);
 });
+}
+
+function addCharacterClickListener(characters) {
+    let characterList = document.getElementById('character-bar');
+
+characterList.addEventListener('click', event => {
+    const clickedCharacter = characters.find(character => character.name === event.target.innerText);
+    if (clickedCharacter) {
+        displayCharacterDetails(clickedCharacter);
+    }
+});
+}
+
+let characterId;
+function displayCharacterDetails(character) {
+    characterId=character.id
+    let detailDiv = document.getElementById('detailed-info');
+    detailDiv.innerHTML = `<h2>${character.name}</h2>
+        <p>ID: ${character.id}</p>
+        <img src="${character.image}" alt="${character.name}" width="300px"/>
+        <h4>Total Votes: <span id="vote-count">${character.votes}</span></h4>
+        <form id="votes-form">
+          <input type="text" placeholder="Enter Votes" value="" id="votes" name="votes" />
+          <input type="submit" value="Add Votes" />
+        </form>
+        <button id="reset-btn">Reset Votes</button>;`
+}
+
+characterNames();
+function addVoteFunctionality() {
+    document.getElementById('detailed-info').addEventListener('submit', event => {
+        event.preventDefault();
+        const voteCountElement = document.getElementById('vote-count');
+        const votesInput = document.getElementById('votes');
+        const newVotes = parseInt(votesInput.value);
+        if (!isNaN(newVotes)) {
+            const currentVotes = parseInt(voteCountElement.innerText);
+            voteCountElement.innerText = currentVotes + newVotes;
+            patchCharacterVotes(characterId, currentVotes + newVotes);
+        }
+        votesInput.value = '';
+    });
+
+    document.getElementById('detailed-info').addEventListener('click', event => {
+        if (event.target.id === 'reset-btn') {
+            document.getElementById('vote-count').innerText = '0';
+        }
+    });
+}
+
+addVoteFunctionality();
+
+function patchCharacterVotes(characterId, newVotes) {
+    fetch(`http://localhost:3000/characters/${characterId}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ votes: newVotes })})
+    .then(res => res.json())
+    .then(updatedCharacter => {console.log('Updated character:', updatedCharacter);})
+    .catch(error => {console.error('Error updating character votes:', error);});
+}
+// patchCharacterVotes(characterId, newVotes);
+
