@@ -8,7 +8,6 @@ function characterNames() {
         addCharacterClickListener(data); 
     })
 }
-
 function displayCharacterNames(characters) {
     let characterList = document.getElementById('character-bar');
 
@@ -19,7 +18,6 @@ characters.forEach(character => {
     characterList.appendChild(list);
 });
 }
-
 function addCharacterClickListener(characters) {
     let characterList = document.getElementById('character-bar');
 
@@ -30,7 +28,6 @@ characterList.addEventListener('click', event => {
     }
 });
 }
-
 let characterId;
 function displayCharacterDetails(character) {
     characterId=character.id
@@ -45,7 +42,6 @@ function displayCharacterDetails(character) {
         </form>
         <button id="reset-btn">Reset Votes</button>;`
 }
-
 characterNames();
 function addVoteFunctionality() {
     document.getElementById('detailed-info').addEventListener('submit', event => {
@@ -67,9 +63,7 @@ function addVoteFunctionality() {
         }
     });
 }
-
 addVoteFunctionality();
-
 function patchCharacterVotes(characterId, newVotes) {
     fetch(`http://localhost:3000/characters/${characterId}`, {
         method: 'PATCH',
@@ -79,5 +73,5 @@ function patchCharacterVotes(characterId, newVotes) {
     .then(updatedCharacter => {console.log('Updated character:', updatedCharacter);})
     .catch(error => {console.error('Error updating character votes:', error);});
 }
-// patchCharacterVotes(characterId, newVotes);
+
 
